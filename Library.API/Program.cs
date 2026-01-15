@@ -1,5 +1,8 @@
+using Library.Application.Books;
 using Library.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using FluentValidation.AspNetCore;
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,10 +13,30 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Konfiguracja DbContext z u¿yciem SQLite
 builder.Services.AddDbContext<DataContext>(options =>
 {
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+// Dodanie obs³ugi CORS
+builder.Services.AddCors(opt =>
+{
+    opt.AddPolicy("CorsPolicy", policy =>
+    {
+        policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:3000");
+    });
+});
+
+//Dodanie MediatR
+builder.Services.AddMediatR(cfg =>
+cfg.RegisterServicesFromAssembly(typeof(BookList.Handler).Assembly));
+
+// Dodanie FluentValidation
+builder.Services.AddFluentValidationAutoValidation();
+
+// Rejestracja walidatorów z assembly zawieraj¹cego BookCreate
+builder.Services.AddValidatorsFromAssemblyContaining<BookCreate>();
 
 var app = builder.Build();
 
