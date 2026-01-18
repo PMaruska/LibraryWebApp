@@ -12,7 +12,7 @@ namespace Library.Application.Books
 {
     public class BookValidator : AbstractValidator<BookCreateDto>
     {
-        public BookValidator(DataContext context)
+        public BookValidator()
         {
             RuleFor(book => book.Title)
                 .NotEmpty().WithMessage("Title is required.")
@@ -28,7 +28,7 @@ namespace Library.Application.Books
             RuleFor(book => book.Publisher)
                 .NotEmpty().WithMessage("Publisher is required.")
                 .MaximumLength(100).WithMessage("Publisher cannot exceed 100 characters.");
-            RuleFor(book => book.Genre).NotEmpty().WithMessage("Genre is required.")
+            RuleFor(book => book.Genre)
                 .IsInEnum().WithMessage("Genre must be a valid value.");
             RuleFor(book => book.Description)
                 .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters.");

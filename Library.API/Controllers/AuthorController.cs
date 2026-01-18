@@ -1,58 +1,56 @@
-﻿using Library.Application.Books;
+﻿using Library.Application.Authors;
 using Library.Domain;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Library.Application.DTOs;
 
+
 namespace Library.API.Controllers
 {
-    public class BookController : BaseApiController
+    public class AuthorController : BaseApiController
     {
         private readonly IMediator _mediator;
-        public BookController(IMediator mediator)
+        public AuthorController(IMediator mediator)
         {
             _mediator = mediator;
         }
 
-        [HttpGet] //api/books
-        public async Task<ActionResult<List<BookDto>>> GetBooks()
+        [HttpGet] //api/authors
+        public async Task<ActionResult<List<AuthorListDto>>> GetAuthors()
         {
-            var result = await _mediator.Send(new BookList.Query());
+            var result = await _mediator.Send(new AuthorList.Query());
 
             if (result == null || !result.IsSuccess)
-                return BadRequest(); 
+            {
+                return BadRequest();
+            }
 
             return Ok(result.Value);
         }
 
-        [HttpGet("{id}")] //api/books/{id}
-        public async Task<ActionResult<BookDto>> GetBook(Guid id)
+        [HttpGet("{id}")] //api/authors/{id}
+        public async Task<ActionResult<AuthorDto>> GetAuthor(Guid id)
         {
-            var result = await _mediator.Send(new BookDetails.Query { Id = id });
-
+            var result = await _mediator.Send(new AuthorDetails.Query { Id = id });
             if (result == null || result.Value == null)
             {
                 return NotFound();
             }
-
             if (result.IsSuccess)
             {
                 return Ok(result.Value);
             }
-
             return BadRequest(result.ErrorMessage);
-     
         }
 
-        [HttpPut("{id}")] //api/books/id z ciałem JSON obiektu Book
-        public async Task<IActionResult> EditBook(Guid id, BookCreateDto book)
+        [HttpPut("{id}")] //api/authors/id z ciałem JSON obiektu Author
+        public async Task<IActionResult> EditAuthor(Guid id, AuthorCreateDto author)
         {
-            var command = new BookEdit.Command
+            var command = new AuthorEdit.Command
             {
                 Id = id,
-                BookCreateDto = book
+                AuthorCreateDto = author
             };
-
             var result = await _mediator.Send(command);
 
             if (result == null) return NotFound();
@@ -61,29 +59,30 @@ namespace Library.API.Controllers
             {
                 return Ok();
             }
-
             return BadRequest(result.ErrorMessage);
         }
 
-        [HttpPost] //api/books
-        public async Task<ActionResult> CreateBook(BookCreateDto book)
+        [HttpPost] //api/authors
+        public async Task<ActionResult> CreateAuthor(AuthorCreateDto author)
         {
-            var result = await _mediator.Send(new BookCreate.Command { BookCreateDto = book });
-            if (result == null)
-            {
+            var result = await _mediator.Send(new AuthorCreate.Command { AuthorCreateDto = author });
+
+            if (result == null) 
+            { 
                 return BadRequest();
             }
+
             if (result.IsSuccess && result.Value != null)
             {
-                return CreatedAtAction(nameof(GetBook), new { id = result.Value.Id }, result.Value);
+                return CreatedAtAction(nameof(GetAuthor), new { id = result.Value.Id }, result.Value);
             }
             return BadRequest(result.ErrorMessage);
         }
 
-        [HttpDelete("{id}")] //api/books/{id}
-        public async Task<ActionResult> DeleteBook(Guid id)
+        [HttpDelete("{id}")] //api/authors/id
+        public async Task<IActionResult> DeleteAuthor(Guid id)
         {
-            var result = await _mediator.Send(new BookDelete.Command { Id = id });
+            var result = await _mediator.Send(new AuthorDelete.Command { Id = id });
             if (result == null)
             {
                 return NotFound();

@@ -13,10 +13,7 @@ namespace Library.Application.DTOs
         public string Description { get; set; } = string.Empty;
         public string Genre { get; set; } = string.Empty;
         public DateTime PublishedDate { get; set; }
-
-        // Kluczowa zmiana: spłaszczamy obiekt autora do samego imienia i nazwiska
         public string AuthorName { get; set; } = string.Empty;
-
         public string ISBN { get; set; } = string.Empty;
         public int PageCount { get; set; }
         public string Publisher { get; set; } = string.Empty;

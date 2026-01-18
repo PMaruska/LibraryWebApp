@@ -9,27 +9,25 @@ namespace Library.Application.Books
 {
     public class BookList
     {
-        public class Query : IRequest<List<BookDto>> { }
+        public class Query : IRequest<Result<List<BookDto>>> { }
 
-        public class Handler : IRequestHandler<Query, List<BookDto>>
+        public class Handler : IRequestHandler<Query, Result<List<BookDto>>>
         {
             private readonly DataContext _context;
             public Handler(DataContext context)
             {
                 _context = context;
             }
-            public async Task<List<BookDto>> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<Result<List<BookDto>>> Handle(Query request, CancellationToken cancellationToken)
             {
-                // Ręczne mapowanie (w przyszłości można użyć AutoMapper)
-                return await _context.Books
+                var result = await _context.Books
                     .Select(b => new BookDto
                     {
                         Id = b.Id,
                         Title = b.Title,
                         Description = b.Description,
-                        Genre = b.Genre.ToString(), // Enum -> String
+                        Genre = b.Genre.ToString(), 
                         PublishedDate = b.PublishedDate,
-                        // Łączymy imię i nazwisko autora w jeden ciąg
                         AuthorName = $"{b.Author.FirstName} {b.Author.LastName}",
                         ISBN = b.ISBN,
                         PageCount = b.PageCount,
@@ -37,6 +35,8 @@ namespace Library.Application.Books
                         IsAvailable = b.IsAvailable
                     })
                     .ToListAsync(cancellationToken);
+
+                return Result<List<BookDto>>.Success(result);
             }
         }   
     }

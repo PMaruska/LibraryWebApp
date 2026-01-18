@@ -26,17 +26,16 @@ namespace Library.Application.Books
             }
             public async Task<Result<BookDto>> Handle(Query request, CancellationToken cancellationToken)
             {
-                // 2. Wyszukujemy i mapujemy w jednym zapytaniu
                 var bookDto = await _context.Books
-                    .Where(b => b.Id == request.Id) // Najpierw filtrujemy po ID (optymalizacja SQL)
+                    .Where(b => b.Id == request.Id) 
                     .Select(b => new BookDto
                     {
                         Id = b.Id,
                         Title = b.Title,
                         Description = b.Description,
-                        Genre = b.Genre.ToString(), // Konwersja Enum -> String
+                        Genre = b.Genre.ToString(), 
                         PublishedDate = b.PublishedDate,
-                        AuthorName = $"{b.Author.FirstName} {b.Author.LastName}", // Spłaszczamy Autora
+                        AuthorName = $"{b.Author.FirstName} {b.Author.LastName}", 
                         ISBN = b.ISBN,
                         PageCount = b.PageCount,
                         Publisher = b.Publisher,
@@ -44,7 +43,6 @@ namespace Library.Application.Books
                     })
                     .FirstOrDefaultAsync(cancellationToken);
 
-                // 3. Sprawdzamy, czy książka została znaleziona
                 if (bookDto == null)
                 {
                     return Result<BookDto>.Failure("Book not found");

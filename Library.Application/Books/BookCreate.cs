@@ -2,7 +2,7 @@
 using Library.Domain;
 using Library.Infrastructure;
 using FluentValidation;
-using Library.Application.DTOs; // Upewnij się, że masz tu swoje DTO
+using Library.Application.DTOs; 
 
 namespace Library.Application.Books
 {
@@ -15,9 +15,9 @@ namespace Library.Application.Books
 
         public class CommandValidator : AbstractValidator<Command>
         {
-            public CommandValidator(DataContext context)
+            public CommandValidator()
             {
-                RuleFor(x => x.BookCreateDto).SetValidator(new BookValidator(context));
+                RuleFor(x => x.BookCreateDto).SetValidator(new BookValidator());
             }
         }
 
@@ -56,8 +56,6 @@ namespace Library.Application.Books
 
                 if (!success) return Result<BookDto>.Failure("Failed to create book.");
 
-                // Mapowanie Encja -> BookDto (Output)
-                // Dzięki temu zwracamy obiekt z ID!
                 var resultDto = new BookDto
                 {
                     Id = book.Id,

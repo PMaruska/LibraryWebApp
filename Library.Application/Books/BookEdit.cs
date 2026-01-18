@@ -11,14 +11,14 @@ namespace Library.Application.Books
         public class Command : IRequest<Result<Unit>>
         {
             public Guid Id { get; set; }
-            public required BookCreateDto BookDto { get; set; }
+            public required BookCreateDto BookCreateDto { get; set; }
         }
 
         public class CommandValidator : AbstractValidator<Command>
         {
-            public CommandValidator(DataContext context)
+            public CommandValidator()
             {
-                RuleFor(x => x.BookDto).SetValidator(new BookValidator(context));
+                RuleFor(x => x.BookCreateDto).SetValidator(new BookValidator());
             }
         }
 
@@ -40,20 +40,20 @@ namespace Library.Application.Books
                     return Result<Unit>.Failure("Book not found");
                 }
 
-                if (await _context.Authors.FindAsync(new object?[] { request.BookDto.AuthorId }, cancellationToken) is null)
+                if (await _context.Authors.FindAsync(new object?[] { request.BookCreateDto.AuthorId }, cancellationToken) is null)
                 {
                     return Result<Unit>.Failure("Author not found.");
                 }
 
-                book.Title = request.BookDto.Title;
-                book.Description = request.BookDto.Description ?? string.Empty; 
-                book.Genre = request.BookDto.Genre;
-                book.AuthorId = request.BookDto.AuthorId; 
-                book.PublishedDate = request.BookDto.PublishedDate;
-                book.ISBN = request.BookDto.ISBN;
-                book.PageCount = request.BookDto.PageCount;
-                book.Publisher = request.BookDto.Publisher;
-                book.IsAvailable = request.BookDto.IsAvailable;
+                book.Title = request.BookCreateDto.Title;
+                book.Description = request.BookCreateDto.Description ?? string.Empty; 
+                book.Genre = request.BookCreateDto.Genre;
+                book.AuthorId = request.BookCreateDto.AuthorId; 
+                book.PublishedDate = request.BookCreateDto.PublishedDate;
+                book.ISBN = request.BookCreateDto.ISBN;
+                book.PageCount = request.BookCreateDto.PageCount;
+                book.Publisher = request.BookCreateDto.Publisher;
+                book.IsAvailable = request.BookCreateDto.IsAvailable;
 
                 var result = await _context.SaveChangesAsync(cancellationToken) > 0;
 
