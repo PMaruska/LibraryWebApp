@@ -7,28 +7,50 @@ using Library.Domain;
 using Library.Infrastructure;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Library.Application.DTOs;
 
 namespace Library.Application.Books
 {
     public class BookDetails
     {
-        public class Query : IRequest<Result<Book>>
+        public class Query : IRequest<Result<BookDto>>
         {
             public Guid Id { get; set; }
         }
-        public class Handler : IRequestHandler<Query, Result<Book>>
+        public class Handler : IRequestHandler<Query, Result<BookDto>>
         {
             private readonly DataContext _context;
             public Handler(DataContext context)
             {
                 _context = context;
             }
-            public async Task<Result<Book>> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<Result<BookDto>> Handle(Query request, CancellationToken cancellationToken)
             {
-                var book = await _context.Books
-                    .Include(b => b.Author) // Dołącz autora do książki
-                    .FirstOrDefaultAsync(b => b.Id == request.Id, cancellationToken);
-                return Result<Book>.Success(book);
+                // 2. Wyszukujemy i mapujemy w jednym zapytaniu
+                var bookDto = await _context.Books
+                    .Where(b => b.Id == request.Id) // Najpierw filtrujemy po ID (optymalizacja SQL)
+                    .Select(b => new BookDto
+                    {
+                        Id = b.Id,
+                        Title = b.Title,
+                        Description = b.Description,
+                        Genre = b.Genre.ToString(), // Konwersja Enum -> String
+                        PublishedDate = b.PublishedDate,
+                        AuthorName = $"{b.Author.FirstName} {b.Author.LastName}", // Spłaszczamy Autora
+                        ISBN = b.ISBN,
+                        PageCount = b.PageCount,
+                        Publisher = b.Publisher,
+                        IsAvailable = b.IsAvailable
+                    })
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                // 3. Sprawdzamy, czy książka została znaleziona
+                if (bookDto == null)
+                {
+                    return Result<BookDto>.Failure("Book not found");
+                }
+
+                return Result<BookDto>.Success(bookDto);
             }
         }
     }

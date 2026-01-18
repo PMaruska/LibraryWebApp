@@ -2,6 +2,7 @@
 using Library.Domain;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Library.Application.DTOs;
 
 namespace Library.API.Controllers
 {
@@ -14,13 +15,13 @@ namespace Library.API.Controllers
         }
 
         [HttpGet] //api/books
-        public async Task<ActionResult<List<Book>>> GetBooks()
+        public async Task<ActionResult<List<BookDto>>> GetBooks()
         {
             return await _mediator.Send(new BookList.Query());
         }
 
         [HttpGet("{id}")] //api/books/{id}
-        public async Task<ActionResult<Book>> GetBook(Guid id)
+        public async Task<ActionResult<BookDto>> GetBook(Guid id)
         {
             var result = await _mediator.Send(new BookDetails.Query { Id = id });
 
@@ -39,25 +40,30 @@ namespace Library.API.Controllers
         }
 
         [HttpPut("{id}")] //api/books/id z ciałem JSON obiektu Book
-        public async Task<IActionResult> EditBook(Guid id, Book book)
+        public async Task<IActionResult> EditBook(Guid id, BookCreateDto book)
         {
-            book.Id = id;
-            var result = await _mediator.Send(new  BookEdit.Command { Book = book});
-            if (result == null)
+            var command = new BookEdit.Command
             {
-                return NotFound();
-            }
+                Id = id,
+                BookDto = book
+            };
+
+            var result = await _mediator.Send(command);
+
+            if (result == null) return NotFound();
+
             if (result.IsSuccess)
             {
-                return Ok();
+                return Ok(result.Value);
             }
+
             return BadRequest(result.ErrorMessage);
         }
 
         [HttpPost] //api/books
-        public async Task<ActionResult> CreateBook(Book book)
+        public async Task<ActionResult> CreateBook(BookCreateDto book)
         {
-            var result = await _mediator.Send(new BookCreate.Command { Book = book });
+            var result = await _mediator.Send(new BookCreate.Command { BookCreateDto = book });
             if (result == null || !result.IsSuccess)
             {
                 return BadRequest();

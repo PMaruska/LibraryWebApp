@@ -1,32 +1,27 @@
 ﻿using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Library.Domain;
 using Library.Infrastructure;
 using FluentValidation;
-using System.ComponentModel.DataAnnotations;
+using Library.Application.DTOs; // Upewnij się, że masz tu swoje DTO
 
 namespace Library.Application.Books
 {
     public class BookCreate
     {
-        public class Command : IRequest<Result<Book>>
+        public class Command : IRequest<Result<BookDto>>
         {
-            public required Book Book { get; set; }
+            public required BookCreateDto BookCreateDto { get; set; }
         }
 
         public class CommandValidator : AbstractValidator<Command>
         {
-            public CommandValidator()
+            public CommandValidator(DataContext context)
             {
-                RuleFor(x => x.Book).SetValidator(new BookValidator());
+                RuleFor(x => x.BookCreateDto).SetValidator(new BookValidator(context));
             }
         }
 
-        public class  Handler : IRequestHandler<Command, Result<Book>>
+        public class Handler : IRequestHandler<Command, Result<BookDto>>
         {
             private readonly DataContext _context;
 
@@ -35,18 +30,50 @@ namespace Library.Application.Books
                 _context = context;
             }
 
-            public async Task<Result<Book>> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<Result<BookDto>> Handle(Command request, CancellationToken cancellationToken)
             {
-                _context.Books.Add(request.Book);
-                var success = await _context.SaveChangesAsync(cancellationToken) > 0;
-                if (!success)
+                if (await _context.Authors.FindAsync(new object?[] { request.BookCreateDto.AuthorId }, cancellationToken) is null)
                 {
-                    return Result<Book>.Failure("Failed to create book.");
+                    return Result<BookDto>.Failure("Author not found.");
                 }
-                return Result<Book>.Success(request.Book);
+
+                var book = new Book
+                {
+                    Id = Guid.NewGuid(),
+                    Title = request.BookCreateDto.Title,
+                    Description = request.BookCreateDto.Description,
+                    Genre = request.BookCreateDto.Genre,
+                    AuthorId = request.BookCreateDto.AuthorId,
+                    PublishedDate = request.BookCreateDto.PublishedDate,
+                    ISBN = request.BookCreateDto.ISBN,
+                    PageCount = request.BookCreateDto.PageCount,
+                    Publisher = request.BookCreateDto.Publisher,
+                    IsAvailable = request.BookCreateDto.IsAvailable
+                };
+
+                _context.Books.Add(book);
+                var success = await _context.SaveChangesAsync(cancellationToken) > 0;
+
+                if (!success) return Result<BookDto>.Failure("Failed to create book.");
+
+                // Mapowanie Encja -> BookDto (Output)
+                // Dzięki temu zwracamy obiekt z ID!
+                var resultDto = new BookDto
+                {
+                    Id = book.Id,
+                    Title = book.Title,
+                    Description = book.Description,
+                    Genre = book.Genre.ToString(),
+                    PublishedDate = book.PublishedDate,
+                    ISBN = book.ISBN,
+                    PageCount = book.PageCount,
+                    Publisher = book.Publisher,
+                    IsAvailable = book.IsAvailable,
+                    AuthorName = ""
+                };
+
+                return Result<BookDto>.Success(resultDto);
             }
         }
-
-        
     }
 }

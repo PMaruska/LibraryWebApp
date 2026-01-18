@@ -5,18 +5,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Library.Domain;
+using Library.Application.DTOs;
+using Library.Infrastructure;
 
 namespace Library.Application.Books
 {
-    public class BookValidator : AbstractValidator<Book>
+    public class BookValidator : AbstractValidator<BookCreateDto>
     {
-        public BookValidator()
+        public BookValidator(DataContext context)
         {
             RuleFor(book => book.Title)
                 .NotEmpty().WithMessage("Title is required.")
                 .MaximumLength(200).WithMessage("Title cannot exceed 200 characters.");
-            RuleFor(book => book.Author)
-                .NotNull().WithMessage("Author is required.");
+            RuleFor(book => book.AuthorId)
+                .NotNull().WithMessage("AuthorId is required.");
             RuleFor(book => book.PublishedDate).NotNull().WithMessage("Published date is required.")
                 .LessThanOrEqualTo(DateTime.Now).WithMessage("Published date cannot be in the future.");
             RuleFor(book => book.ISBN).NotNull().WithMessage("ISBN is required.")
@@ -30,7 +32,6 @@ namespace Library.Application.Books
                 .IsInEnum().WithMessage("Genre must be a valid value.");
             RuleFor(book => book.Description)
                 .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters.");
-            RuleFor(book => book.IsAvailable).NotNull().WithMessage("Availability status is required.");
         }
     }
 }
