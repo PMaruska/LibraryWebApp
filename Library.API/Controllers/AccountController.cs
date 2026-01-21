@@ -50,7 +50,7 @@ namespace Library.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (await _userManager.Users.AnyAsync(x => x.UserName == registerDto.Username))
+            if (await _userManager.Users.AnyAsync(x => x.UserName == registerDto.UserName))
             {
                 return BadRequest("Username is already taken");
             }
@@ -58,7 +58,7 @@ namespace Library.API.Controllers
             var users = new AppUser
             {
                 DisplayName = registerDto.DisplayName,
-                UserName = registerDto.Username,
+                UserName = registerDto.UserName,
                 Email = registerDto.Email,
                 Bio = ""
             };
